@@ -296,33 +296,33 @@ if __name__ == "__main__":
         type=int,
         help="gpu id for evaluation"
     )
-    parser.add_argument(
-        "--imgs",
-        required=True,
-        type=str,
-        help="an image path, or a directory name"
-    )
+    # parser.add_argument(
+    #     "--imgs",
+    #     required=True,
+    #     type=str,
+    #     help="an image path, or a directory name"
+    # )
 
     args = parser.parse_args()
 
     # generate testing image list
-    if os.path.isdir(args.imgs):
-        imgs = find_recursive(args.imgs)
-    else:
-        imgs = [args.imgs]
-    assert len(imgs), "imgs should be a path to image (.jpg) or directory."
-    cfg.list_test = [{'fpath_img': x} for x in imgs]
+    # if os.path.isdir(args.imgs):
+    #     imgs = find_recursive(args.imgs)
+    # else:
+    #     imgs = [args.imgs]
+    # assert len(imgs), "imgs should be a path to image (.jpg) or directory."
+    # cfg.list_test = [{'fpath_img': x} for x in imgs]
 
-    dataset_test = TestDataset(
-        cfg.list_test,
-        cfg.DATASET)
-    loader_test = torch.utils.data.DataLoader(
-        dataset_test,
-        batch_size=cfg.TEST.batch_size,
-        shuffle=False,
-        collate_fn=user_scattered_collate,
-        num_workers=5,
-        drop_last=True)
+    # dataset_test = TestDataset(
+    #     cfg.list_test,
+    #     cfg.DATASET)
+    # loader_test = torch.utils.data.DataLoader(
+    #     dataset_test,
+    #     batch_size=cfg.TEST.batch_size,
+    #     shuffle=False,
+    #     collate_fn=user_scattered_collate,
+    #     num_workers=5,
+    #     drop_last=True)
 
     rospy.init_node("object_segmentation")
     detection_model = load_model(args.cfg, args.gpu)
