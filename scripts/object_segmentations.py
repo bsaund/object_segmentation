@@ -229,11 +229,11 @@ def visualize_result(data, pred, cfg):
     pixs = pred.size
     uniques, counts = np.unique(pred, return_counts=True)
     # print("Predictions in [{}]:".format(info))
-    # for idx in np.argsort(counts)[::-1]:
-    #     name = names[uniques[idx] + 1]
-    #     ratio = counts[idx] / pixs * 100
-        # if ratio > 0.1:
-        #     print("  {}: {:.2f}%".format(name, ratio))
+    for idx in np.argsort(counts)[::-1]:
+        name = names[uniques[idx] + 1]
+        ratio = counts[idx] / pixs * 100
+        if ratio > 0.1:
+            print("  {}: {:.2f}%".format(name, ratio))
 
     # colorize prediction
     pred_color = colorEncode(pred, colors).astype(np.uint8)
@@ -285,7 +285,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--cfg",
         # default="config/ade20k-resnet50dilated-ppm_deepsup.yaml",
-        default="config/ade20k-mobilenetv2dilated-c1_deepsup.yaml",
+        # default="config/ade20k-mobilenetv2dilated-c1_deepsup.yaml",
+        default="config/fat-mobilenetv2dilated-c1_deepsup.yaml",
         metavar="FILE",
         help="path to config file",
         type=str,
