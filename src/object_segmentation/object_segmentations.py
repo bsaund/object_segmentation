@@ -24,7 +24,9 @@ from pathlib import Path
 
 
 class Segmenter:
-    def __init__(self, cfg, gpu):
+    def __init__(self,
+                 cfg="config/fat-mobilenetv2dilated-c1_deepsup.yaml",
+                 gpu=0):
         self.colors = None
         self.names = {}
         self.model = None
@@ -100,13 +102,16 @@ class Segmenter:
 
         # aggregate images and save
         # im_vis = np.concatenate((img, pred_color), axis=1)
+        if not overlay and not concat:
+            return np.repeat(np.expand_dims(pred.astype(np.uint8), 2), 3, 2)
+
         if overlay:
             img = (img.astype('float') + pred_color.astype('float')).clip(0, 255).astype('uint8')
         if concat:
             img = np.concatenate((img, pred_color), axis=1)
         return img
 
-    def run_inference_for_single_image(self, image, gpu=0):
+    def run_inference_for_single_image(self, image, gpu=0, overlay=True, concat=False):
         preproc_data = preprocess_image(image)
 
         batch_data = preproc_data
@@ -132,7 +137,7 @@ class Segmenter:
             _, pred = torch.max(scores, dim=1)
             pred = pred.squeeze(0).cpu().numpy()
 
-        img_vis = self.visualize_result((batch_data['img_ori'], None), pred)
+        img_vis = self.visualize_result((batch_data['img_ori'], None), pred, overlay, concat)
         print("This took {}".format(time.time() - t0))
         return img_vis
 
