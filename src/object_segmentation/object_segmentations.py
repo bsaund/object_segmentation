@@ -16,7 +16,7 @@ import torch
 import torch.nn as nn
 from torchvision import transforms
 import rospkg
-from scipy.io import loadmat
+from scipy.io import loadmat, savemat
 import csv
 
 import time
@@ -81,7 +81,7 @@ class Segmenter:
         segmentation_module.eval()
         self.model = segmentation_module
 
-    def visualize_result(self, data, pred, cfg):
+    def visualize_result(self, data, pred, overlay=True, concat=False):
         (img, info) = data
 
         # print predictions in descending order
@@ -99,8 +99,12 @@ class Segmenter:
         pred_color = colorEncode(pred, self.colors).astype(np.uint8)
 
         # aggregate images and save
-        im_vis = np.concatenate((img, pred_color), axis=1)
-        return im_vis
+        # im_vis = np.concatenate((img, pred_color), axis=1)
+        if overlay:
+            img = (img.astype('float') + pred_color.astype('float')).clip(0, 255).astype('uint8')
+        if concat:
+            img = np.concatenate((img, pred_color), axis=1)
+        return img
 
     def run_inference_for_single_image(self, image, gpu=0):
         preproc_data = preprocess_image(image)
@@ -128,7 +132,7 @@ class Segmenter:
             _, pred = torch.max(scores, dim=1)
             pred = pred.squeeze(0).cpu().numpy()
 
-        img_vis = self.visualize_result((batch_data['img_ori'], None), pred, cfg)
+        img_vis = self.visualize_result((batch_data['img_ori'], None), pred)
         print("This took {}".format(time.time() - t0))
         return img_vis
 
