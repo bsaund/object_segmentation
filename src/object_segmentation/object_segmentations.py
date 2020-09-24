@@ -63,7 +63,7 @@ def load_model(cfg_file, gpu):
     basepath = rospkg.RosPack().get_path('object_segmentation')
     cfg.merge_from_file(basepath + "/" + cfg_file)
 
-    logger = setup_logger(distributed_rank=0)  # TODO
+    logger = setup_logger(distributed_rank=0) 
     logger.info("Loaded configuration file {}".format(args.cfg))
     logger.info("Running with config:\n{}".format(cfg))
 
