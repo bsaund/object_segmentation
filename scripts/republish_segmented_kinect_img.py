@@ -47,7 +47,8 @@ def img_callback(img_msg):
     print("Delay of {:2.3f} is too far behind, skipping this call".format(delay))
 
 
-def kinect_callback(img_msg, depth_msg):
+# def kinect_callback(img_msg, depth_msg):
+def img_callback(img_msg):
     global already_processing
     if already_processing:
         print("skipping this call")
@@ -105,14 +106,14 @@ if __name__ == "__main__":
     marked_pub = rospy.Publisher("/marked_image/compressed", CompressedImage, queue_size=1)
 
     # image_sub = message_filters.Subscriber("/kinect2_victor_head/hd/image_color/compressed", CompressedImage)
-    image_rect_sub = message_filters.Subscriber("/kinect2_victor_head/qhd/image_color_rect/compressed", CompressedImage)
-    depth_image_sub = message_filters.Subscriber("/kinect2_victor_head/qhd/image_depth_rect/compressed", CompressedImage)
+    # image_rect_sub = message_filters.Subscriber("/kinect2_victor_head/qhd/image_color_rect/compressed", CompressedImage)
+    # depth_image_sub = message_filters.Subscriber("/kinect2_victor_head/qhd/image_depth_rect/compressed", CompressedImage)
+    #
+    # time_sync = message_filters.TimeSynchronizer([image_rect_sub, depth_image_sub], 10)
+    # time_sync.registerCallback(kinect_callback)
 
-    time_sync = message_filters.TimeSynchronizer([image_rect_sub, depth_image_sub], 10)
-    time_sync.registerCallback(kinect_callback)
 
-
-    # img_sub = rospy.Subscriber("/kinect2_victor_head/qhd/image_color/compressed", CompressedImage, img_callback,
-    #                            queue_size=1)
+    img_sub = rospy.Subscriber("/kinect2_victor_head/qhd/image_color/compressed", CompressedImage, img_callback,
+                               queue_size=1)
 
     rospy.spin()
