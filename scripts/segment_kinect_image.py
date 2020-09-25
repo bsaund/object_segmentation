@@ -51,7 +51,7 @@ def img_callback(img_msg):
     dt = (rospy.get_rostime() - img_msg.header.stamp)
     delay = dt.secs + dt.nsecs * 1e-9
     if delay > 0.05:
-        # print("Too far behind, skipping this call")
+        print("Too far behind, skipping this call")
         return
 
     already_processing = True

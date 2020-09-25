@@ -31,6 +31,7 @@ class Segmenter:
         self.colors = None
         self.names = {}
         self.model = None
+        self.gpu = gpu
 
         self._load_params(cfg, gpu)
 
@@ -45,7 +46,8 @@ class Segmenter:
                 self.names[int(row[0])] = row[1]
 
     def _load_model(self, cfg_file, gpu):
-        torch.cuda.set_device(0)
+        if gpu is not None:
+            torch.cuda.set_device(0)
         basepath = rospkg.RosPack().get_path('object_segmentation')
         cfg.merge_from_file(basepath + "/" + cfg_file)
 
@@ -80,7 +82,8 @@ class Segmenter:
         crit = nn.NLLLoss(ignore_index=-1)
 
         segmentation_module = SegmentationModule(net_encoder, net_decoder, crit)
-        segmentation_module.cuda()
+        if self.gpu is not None:
+            segmentation_module.cuda()
         segmentation_module.eval()
         self.model = segmentation_module
 
@@ -112,7 +115,7 @@ class Segmenter:
             img = np.concatenate((img, pred_color), axis=1)
         return img
 
-    def run_inference_for_single_image(self, image, gpu=0, overlay=True, concat=False):
+    def run_inference_for_single_image(self, image, overlay=True, concat=False):
         preproc_data = preprocess_image(image)
 
         batch_data = preproc_data
@@ -121,22 +124,34 @@ class Segmenter:
                     batch_data['img_ori'].shape[1])
         img_resized_list = batch_data['img_data']
         t0 = time.time()
-        with torch.no_grad():
-            # scores = torch.zeros(1, cfg.DATASET.num_class, seg_size[0], seg_size[1])
-            scores = torch.cuda.FloatTensor(1, cfg.DATASET.num_class, seg_size[0], seg_size[1]).fill_(0)
-            scores = async_copy_to(scores, gpu)
 
+        if self.gpu is not None:
+            with torch.no_grad():
+                # scores = torch.zeros(1, cfg.DATASET.num_class, seg_size[0], seg_size[1])
+                scores = torch.cuda.FloatTensor(1, cfg.DATASET.num_class, seg_size[0], seg_size[1]).fill_(0)
+                scores = async_copy_to(scores, self.gpu)
+
+                for img in img_resized_list:
+                    feed_dict = {'img_data': img}
+                    feed_dict = async_copy_to(feed_dict, self.gpu)
+
+                    # forward pass
+
+                    pred_tmp = self.model(feed_dict, segSize=seg_size)
+
+                    scores = scores + pred_tmp / len(cfg.DATASET.imgSizes)
+                _, pred = torch.max(scores, dim=1)
+                pred = pred.squeeze(0).cpu().numpy()
+        else:
+            scores = torch.zeros(1, cfg.DATASET.num_class, seg_size[0], seg_size[1])
             for img in img_resized_list:
                 feed_dict = {'img_data': img}
-                feed_dict = async_copy_to(feed_dict, gpu)
-
                 # forward pass
-
                 pred_tmp = self.model(feed_dict, segSize=seg_size)
 
                 scores = scores + pred_tmp / len(cfg.DATASET.imgSizes)
             _, pred = torch.max(scores, dim=1)
-            pred = pred.squeeze(0).cpu().numpy()
+            pred = pred.squeeze(0).numpy()
 
         img_vis = self.visualize_result((batch_data['img_ori'], None), pred, overlay, concat)
         print("This took {}".format(time.time() - t0))
