@@ -21,6 +21,7 @@ import csv
 
 import time
 from pathlib import Path
+import cv2
 
 
 class Segmenter:
@@ -198,6 +199,30 @@ def preprocess_image(image):
     # output['info'] = this_record['fpath_img']
     return output
 
+
+def compress_img(raw_img):
+    """
+    Returns the compressed image, but no headers.
+    The return value belongs in `your_image_msg.data`
+    :param raw_img:
+    :return:
+    """
+    image_bgr = cv2.cvtColor(raw_img, cv2.COLOR_BGR2RGB)
+    np_arr = np.array(cv2.imencode('.png', image_bgr)[1])
+    return np_arr.tostring()
+
+
+def decompress_img(compressed_msg):
+    np_arr = np.fromstring(compressed_msg.data, np.uint8)
+    image_bgr = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+    image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
+    return image_rgb
+
+
+def decompress_depth(compressed_msg):
+    np_arr = np.fromstring(compressed_msg.data, np.uint16)
+    image_depth = cv2.imdecode(np_arr, cv2.IMREAD_ANYDEPTH)
+    return image_depth
 
 
 

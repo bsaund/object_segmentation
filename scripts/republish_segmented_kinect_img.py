@@ -28,7 +28,7 @@ import rospy
 import rospkg
 
 from sensor_msgs.msg import CompressedImage
-from pointing_detection import img_utils
+# from pointing_detection import img_utils
 from scipy.io import loadmat
 import csv
 
@@ -62,14 +62,14 @@ def kinect_callback(img_msg, depth_msg):
     # print("We are {} seconds behind".format(delay))
 
     already_processing = True
-    decompressed = img_utils.decompress_img(img_msg)
+    decompressed = obseg.decompress_img(img_msg)
     # decompressed = cv2.flip(decompressed, 1)
     t0 = time.time()
     prediction = segmenter.run_inference_for_single_image(decompressed, overlay=False,
                                                           concat=False)
 
-    img_msg.data = img_utils.compress_img(prediction)
-    # img_msg.data = img_utils.compress_img(decompressed)
+    img_msg.data = obseg.compress_img(prediction)
+    # img_msg.data = obseg.compress_img(decompressed)
     marked_pub.publish(img_msg)
     # greet_new_people(output_dict)
     print("Inference took {} seconds".format(time.time() - t0))
@@ -101,8 +101,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     segmenter = obseg.Segmenter(args.cfg, args.gpu)
-
-    talker.init()
 
     marked_pub = rospy.Publisher("/marked_image/compressed", CompressedImage, queue_size=1)
 
