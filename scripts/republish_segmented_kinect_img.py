@@ -26,7 +26,7 @@ from torchvision import transforms
 
 import rospy
 import rospkg
-from amazon_ros_speech import talker
+
 from sensor_msgs.msg import CompressedImage
 from pointing_detection import img_utils
 from scipy.io import loadmat
