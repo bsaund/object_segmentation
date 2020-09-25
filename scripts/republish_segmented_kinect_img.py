@@ -24,9 +24,6 @@ import torch
 import torch.nn as nn
 from torchvision import transforms
 
-
-import cv2
-
 import rospy
 import rospkg
 from amazon_ros_speech import talker
