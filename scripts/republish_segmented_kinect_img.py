@@ -70,7 +70,7 @@ def img_callback(img_msg):
     marked_pub.publish(img_msg)
 
     img_mask = segmenter.visualize_result((decompressed, None), prediction,
-                                          overlay=True, concat=False)
+                                          overlay=False, concat=False)
     img_msg.data = obseg.compress_img(img_mask)
     mask_pub.publish(img_msg)
 
