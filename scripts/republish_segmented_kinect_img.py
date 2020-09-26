@@ -41,14 +41,6 @@ segmenter = None
 
 
 def img_callback(img_msg):
-    dt = (rospy.get_rostime() - img_msg.header.stamp)
-    delay = dt.secs + dt.nsecs * 1e-9
-
-    print("Delay of {:2.3f} is too far behind, skipping this call".format(delay))
-
-
-# def kinect_callback(img_msg, depth_msg):
-def img_callback(img_msg):
     global already_processing
     if already_processing:
         print("skipping this call")
@@ -63,16 +55,27 @@ def img_callback(img_msg):
     # print("We are {} seconds behind".format(delay))
 
     already_processing = True
+
+    t0 = time.time()
     decompressed = obseg.decompress_img(img_msg)
     # decompressed = cv2.flip(decompressed, 1)
     t0 = time.time()
-    prediction = segmenter.run_inference_for_single_image(decompressed, overlay=False,
-                                                          concat=False)
+    prediction = segmenter.run_inference_for_single_image(decompressed)
 
-    img_msg.data = obseg.compress_img(prediction)
+    img_vis = segmenter.visualize_result((decompressed, None), prediction,
+                                         overlay=True, concat=False)
+
+    img_msg.data = obseg.compress_img(img_vis)
     # img_msg.data = obseg.compress_img(decompressed)
     marked_pub.publish(img_msg)
-    # greet_new_people(output_dict)
+
+    img_mask = segmenter.visualize_result((decompressed, None), prediction,
+                                          overlay=True, concat=False)
+    img_msg.data = obseg.compress_img(img_mask)
+    mask_pub.publish(img_msg)
+
+    print("This took {}".format(time.time() - t0))
+
     print("Inference took {} seconds".format(time.time() - t0))
 
     already_processing = False
@@ -103,7 +106,8 @@ if __name__ == "__main__":
 
     segmenter = obseg.Segmenter(args.cfg, args.gpu)
 
-    marked_pub = rospy.Publisher("/marked_image/compressed", CompressedImage, queue_size=1)
+    marked_pub = rospy.Publisher("marked_image/compressed", CompressedImage, queue_size=1)
+    mask_pub = rospy.Publisher("segmentation_mask/compressed", CompressedImage, queue_size=1)
 
     # image_sub = message_filters.Subscriber("/kinect2_victor_head/hd/image_color/compressed", CompressedImage)
     # image_rect_sub = message_filters.Subscriber("/kinect2_victor_head/qhd/image_color_rect/compressed", CompressedImage)
@@ -111,7 +115,6 @@ if __name__ == "__main__":
     #
     # time_sync = message_filters.TimeSynchronizer([image_rect_sub, depth_image_sub], 10)
     # time_sync.registerCallback(kinect_callback)
-
 
     img_sub = rospy.Subscriber("/kinect2_victor_head/qhd/image_color/compressed", CompressedImage, img_callback,
                                queue_size=1)

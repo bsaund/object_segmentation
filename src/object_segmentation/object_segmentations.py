@@ -123,7 +123,6 @@ class Segmenter:
         seg_size = (batch_data['img_ori'].shape[0],
                     batch_data['img_ori'].shape[1])
         img_resized_list = batch_data['img_data']
-        t0 = time.time()
 
         if self.gpu is not None:
             with torch.no_grad():
@@ -153,9 +152,8 @@ class Segmenter:
             _, pred = torch.max(scores, dim=1)
             pred = pred.squeeze(0).numpy()
 
-        img_vis = self.visualize_result((batch_data['img_ori'], None), pred, overlay, concat)
-        print("This took {}".format(time.time() - t0))
-        return img_vis
+        return pred
+
 
 
 def round2nearest_multiple(x, p):
