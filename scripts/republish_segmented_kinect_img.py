@@ -5,7 +5,7 @@ import rospy
 
 from sensor_msgs.msg import CompressedImage
 import time
-
+import sys
 from object_segmentation import object_segmentations as obseg
 
 segmenter = None
@@ -81,8 +81,11 @@ if __name__ == "__main__":
         help="gpu id for evaluation"
     )
 
-    args = parser.parse_args()
+    # print(rospy.myargv(argv=sys.argv))
+    args = parser.parse_args(args=rospy.myargv(argv=sys.argv)[1:])
 
+    # cfg = default="config/ycbvideo-mobilenetv2dilated-c1_deepsup.yaml"
+    # gpu = 0
     segmenter = obseg.Segmenter(args.cfg, args.gpu)
 
     marked_pub = rospy.Publisher("marked_image/compressed", CompressedImage, queue_size=1)

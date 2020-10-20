@@ -9,6 +9,7 @@ from sensor_msgs.msg import CompressedImage
 from shape_completion_training.model import utils
 import message_filters
 from object_segmentation import pointcloud_utils as utils
+import sys
 
 img_msgs_to_process = None
 
@@ -53,6 +54,7 @@ def filter_pointcloud(img_mask_msg, img_rect_msg, depth_rect_msg):
 
 if __name__ == "__main__":
     rospy.init_node("segmented_pointcloud_republisher")
+    myargv = rospy.myargv(argv=sys.argv)
 
     cloud_pub = rospy.Publisher("/segmented_pointcloud", PointCloud2, queue_size=1)
 
