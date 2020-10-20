@@ -1,36 +1,13 @@
 #! /usr/bin/env python
 import argparse
-import os
-import pathlib
-
-import numpy as np
-
-from PIL import Image
-import message_filters
 import threading
-
-from mit_semseg.models import ModelBuilder, SegmentationModule
-from mit_semseg.config import cfg
-from mit_semseg.lib.nn import user_scattered_collate, async_copy_to
-from mit_semseg.utils import colorEncode, find_recursive, setup_logger
-from mit_semseg.dataset import TestDataset
-
-import torch
-import torch.nn as nn
-from torchvision import transforms
-
 import rospy
-import rospkg
 
 from sensor_msgs.msg import CompressedImage
-from scipy.io import loadmat
-import csv
-
 import time
 
 from object_segmentation import object_segmentations as obseg
 
-# already_processing = False
 segmenter = None
 img_msg_to_process = None
 
