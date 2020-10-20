@@ -7,11 +7,7 @@ import numpy as np
 
 from PIL import Image
 import message_filters
-
-# from object_detection.utils import ops as utils_ops
-# from object_detection.utils import label_map_util
-# from object_detection.utils import visualization_utils as vis_util
-
+import threading
 
 from mit_semseg.models import ModelBuilder, SegmentationModule
 from mit_semseg.config import cfg
@@ -27,7 +23,6 @@ import rospy
 import rospkg
 
 from sensor_msgs.msg import CompressedImage
-# from pointing_detection import img_utils
 from scipy.io import loadmat
 import csv
 
@@ -35,26 +30,38 @@ import time
 
 from object_segmentation import object_segmentations as obseg
 
-already_processing = False
+# already_processing = False
 segmenter = None
+img_msg_to_process = None
 
 
 def img_callback(img_msg):
-    global already_processing
-    if already_processing:
-        print("skipping this call")
+    global img_msg_to_process
+    if img_msg_to_process is not None:
+        # print("already processing an image, skipping this call")
         return
+    img_msg_to_process = img_msg
     # print("Image received")
 
-    dt = (rospy.get_rostime() - img_msg.header.stamp)
-    delay = dt.secs + dt.nsecs * 1e-9
-    if delay > 0.3:
-        print("Delay of {:2.3f} is too far behind, skipping this call".format(delay))
-        return
+    # dt = (rospy.get_rostime() - img_msg.header.stamp)
+    # delay = dt.secs + dt.nsecs * 1e-9
+    # if delay > 0.3:
+    #     print("Delay of {:2.3f} is too far behind, skipping this call".format(delay))
+    #     return
     # print("We are {} seconds behind".format(delay))
 
-    already_processing = True
 
+def segment_thread_worker():
+    global img_msg_to_process
+    while not rospy.is_shutdown():
+        if img_msg_to_process is None:
+            rospy.sleep(0.01)
+            continue
+        segment_and_republish(img_msg_to_process)
+        img_msg_to_process = None
+
+
+def segment_and_republish(img_msg):
     t0 = time.time()
     decompressed = obseg.decompress_img(img_msg)
     # decompressed = cv2.flip(decompressed, 1)
@@ -62,7 +69,7 @@ def img_callback(img_msg):
     prediction = segmenter.run_inference_for_single_image(decompressed)
 
     img_vis = segmenter.visualize_result((decompressed, None), prediction,
-                                         overlay=True, concat=False)
+                                         overlay=True, concat=False, verbose=True)
 
     img_msg.data = obseg.compress_img(img_vis)
     # img_msg.data = obseg.compress_img(decompressed)
@@ -73,9 +80,7 @@ def img_callback(img_msg):
     img_msg.data = obseg.compress_img(img_mask)
     mask_pub.publish(img_msg)
 
-    print("This took {}".format(time.time() - t0))
-
-    print("Inference took {} seconds".format(time.time() - t0))
+    rospy.loginfo("Inference took {} seconds".format(time.time() - t0))
 
     already_processing = False
 
@@ -87,9 +92,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--cfg",
-        # default="config/ade20k-resnet50dilated-ppm_deepsup.yaml",
-        # default="config/ade20k-mobilenetv2dilated-c1_deepsup.yaml",
-        default="config/fat-mobilenetv2dilated-c1_deepsup.yaml",
+        default="config/ycbvideo-mobilenetv2dilated-c1_deepsup.yaml",
         metavar="FILE",
         help="path to config file",
         type=str,
@@ -108,12 +111,8 @@ if __name__ == "__main__":
     marked_pub = rospy.Publisher("marked_image/compressed", CompressedImage, queue_size=1)
     mask_pub = rospy.Publisher("segmentation_mask/compressed", CompressedImage, queue_size=1)
 
-    # image_sub = message_filters.Subscriber("/kinect2_victor_head/hd/image_color/compressed", CompressedImage)
-    # image_rect_sub = message_filters.Subscriber("/kinect2_victor_head/qhd/image_color_rect/compressed", CompressedImage)
-    # depth_image_sub = message_filters.Subscriber("/kinect2_victor_head/qhd/image_depth_rect/compressed", CompressedImage)
-    #
-    # time_sync = message_filters.TimeSynchronizer([image_rect_sub, depth_image_sub], 10)
-    # time_sync.registerCallback(kinect_callback)
+    segment_thread = threading.Thread(target=segment_thread_worker)
+    segment_thread.start()
 
     img_sub = rospy.Subscriber("/kinect2_victor_head/qhd/image_color/compressed", CompressedImage, img_callback,
                                queue_size=1)

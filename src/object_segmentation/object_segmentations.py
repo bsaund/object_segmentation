@@ -5,38 +5,37 @@ import numpy as np
 
 from PIL import Image
 
-
 from mit_semseg.models import ModelBuilder, SegmentationModule
 from mit_semseg.config import cfg
-from mit_semseg.lib.nn import user_scattered_collate, async_copy_to
-from mit_semseg.utils import colorEncode, find_recursive, setup_logger
-from mit_semseg.dataset import TestDataset
+from mit_semseg.lib.nn import async_copy_to
+from mit_semseg.utils import colorEncode, setup_logger
+
+from object_segmentation import download_pretrained_models as download
 
 import torch
 import torch.nn as nn
 from torchvision import transforms
 import rospkg
-from scipy.io import loadmat, savemat
+from scipy.io import loadmat
 import csv
 
-import time
 from pathlib import Path
 import cv2
 
 
 class Segmenter:
     def __init__(self,
-                 cfg="config/ycbvideo-mobilenetv2dilated-c1_deepsup.yaml",
+                 cfg_file="config/ycbvideo-mobilenetv2dilated-c1_deepsup.yaml",
                  gpu=0):
         self.colors = None
         self.names = {}
         self.model = None
         self.gpu = gpu
 
-        self._load_params(cfg, gpu)
+        self._load_params(cfg_file, gpu)
 
-    def _load_params(self, cfg, gpu):
-        self._load_model(cfg, gpu)
+    def _load_params(self, cfg_file, gpu):
+        self._load_model(cfg_file, gpu)
         basepath = Path(rospkg.RosPack().get_path('object_segmentation'))
         self.colors = loadmat((basepath / 'data/color150.mat').as_posix())['colors']
         with open((basepath / 'data/object_info.csv').as_posix()) as f:
@@ -52,7 +51,7 @@ class Segmenter:
         cfg.merge_from_file(basepath + "/" + cfg_file)
 
         logger = setup_logger(distributed_rank=0)
-        # logger.info("Loaded configuration file {}".format(args.cfg))
+        logger.info(f"Loaded configuration file {cfg_file}")
         logger.info("Running with config:\n{}".format(cfg))
 
         cfg.MODEL.arch_encoder = cfg.MODEL.arch_encoder.lower()
@@ -60,14 +59,13 @@ class Segmenter:
 
         # absolute paths of model weights
         cfg.MODEL.weights_encoder = (Path(basepath) / cfg.DIR / ('encoder_' + cfg.TEST.checkpoint)).as_posix()
-        # os.path.join(
-        #     cfg.DIR, 'encoder_' + cfg.TEST.checkpoint)
         cfg.MODEL.weights_decoder = (Path(basepath) / cfg.DIR / ('decoder_' + cfg.TEST.checkpoint)).as_posix()
-        # os.path.join(
-        #     cfg.DIR, 'decoder_' + cfg.TEST.checkpoint)
 
-        assert os.path.exists(cfg.MODEL.weights_encoder) and \
-               os.path.exists(cfg.MODEL.weights_decoder), "checkpoint does not exitst!"
+        if not os.path.exists(cfg.MODEL.weights_encoder) or not os.path.exists(cfg.MODEL.weights_decoder):
+            download.ycb(Path(basepath) / 'ckpt')
+
+        assert os.path.exists(cfg.MODEL.weights_encoder), f"checkpoint {cfg.MODEL.weights_encoder} does not exitst!"
+        assert os.path.exists(cfg.MODEL.weights_decoder), f"checkpoint {cfg.MODEL.weights_decoder} does not exitst!"
 
         # Network Builders
         net_encoder = ModelBuilder.build_encoder(
@@ -89,7 +87,7 @@ class Segmenter:
         segmentation_module.eval()
         self.model = segmentation_module
 
-    def visualize_result(self, data, pred, overlay=True, concat=False):
+    def visualize_result(self, data, pred, overlay=True, concat=False, verbose=False):
         (img, info) = data
 
         # print predictions in descending order
@@ -97,11 +95,12 @@ class Segmenter:
         pixs = pred.size
         uniques, counts = np.unique(pred, return_counts=True)
         # print("Predictions in [{}]:".format(info))
-        for idx in np.argsort(counts)[::-1]:
-            name = self.names[uniques[idx] + 1]
-            ratio = counts[idx] / pixs * 100
-            if ratio > 0.1:
-                print("  {:20}: {:.2f}%".format(name, ratio))
+        if verbose:
+            for idx in np.argsort(counts)[::-1]:
+                name = self.names[uniques[idx] + 1]
+                ratio = counts[idx] / pixs * 100
+                if ratio > 0.1:
+                    print("  {:20}: {:.2f}%".format(name, ratio))
 
         # colorize prediction
         pred_color = colorEncode(pred, self.colors).astype(np.uint8)
@@ -117,7 +116,7 @@ class Segmenter:
             img = np.concatenate((img, pred_color), axis=1)
         return img
 
-    def run_inference_for_single_image(self, image, overlay=True, concat=False):
+    def run_inference_for_single_image(self, image):
         preproc_data = preprocess_image(image)
 
         batch_data = preproc_data
@@ -157,7 +156,6 @@ class Segmenter:
         return pred
 
 
-
 def round2nearest_multiple(x, p):
     return ((x - 1) // p + 1) * p
 
@@ -180,8 +178,8 @@ def img_transform(img):
     img = np.float32(np.array(img)) / 255.
     img = img.transpose((2, 0, 1))
     normalize = transforms.Normalize(
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225])
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225])
     img = normalize(torch.from_numpy(img.copy()))
     return img
 
@@ -238,10 +236,3 @@ def decompress_depth(compressed_msg):
     np_arr = np.fromstring(compressed_msg.data, np.uint16)
     image_depth = cv2.imdecode(np_arr, cv2.IMREAD_ANYDEPTH)
     return image_depth
-
-
-
-
-
-
-
