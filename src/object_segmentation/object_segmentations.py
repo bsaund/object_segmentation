@@ -26,7 +26,7 @@ import cv2
 
 class Segmenter:
     def __init__(self,
-                 cfg="config/fat-mobilenetv2dilated-c1_deepsup.yaml",
+                 cfg="config/ycbvideo-mobilenetv2dilated-c1_deepsup.yaml",
                  gpu=0):
         self.colors = None
         self.names = {}
@@ -59,10 +59,12 @@ class Segmenter:
         cfg.MODEL.arch_decoder = cfg.MODEL.arch_decoder.lower()
 
         # absolute paths of model weights
-        cfg.MODEL.weights_encoder = os.path.join(
-            cfg.DIR, 'encoder_' + cfg.TEST.checkpoint)
-        cfg.MODEL.weights_decoder = os.path.join(
-            cfg.DIR, 'decoder_' + cfg.TEST.checkpoint)
+        cfg.MODEL.weights_encoder = (Path(basepath) / cfg.DIR / ('encoder_' + cfg.TEST.checkpoint)).as_posix()
+        # os.path.join(
+        #     cfg.DIR, 'encoder_' + cfg.TEST.checkpoint)
+        cfg.MODEL.weights_decoder = (Path(basepath) / cfg.DIR / ('decoder_' + cfg.TEST.checkpoint)).as_posix()
+        # os.path.join(
+        #     cfg.DIR, 'decoder_' + cfg.TEST.checkpoint)
 
         assert os.path.exists(cfg.MODEL.weights_encoder) and \
                os.path.exists(cfg.MODEL.weights_decoder), "checkpoint does not exitst!"

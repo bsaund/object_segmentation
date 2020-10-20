@@ -4,7 +4,6 @@ import os
 import pathlib
 
 import numpy as np
-# import tensorflow as tf
 
 from PIL import Image
 import message_filters
@@ -45,7 +44,7 @@ def img_callback(img_msg):
     if already_processing:
         print("skipping this call")
         return
-    # print("Image recieved")
+    # print("Image received")
 
     dt = (rospy.get_rostime() - img_msg.header.stamp)
     delay = dt.secs + dt.nsecs * 1e-9
