@@ -24,16 +24,20 @@ This packages adds on several new topics to that namespace:
 
 # Installation
 
-This repo is based on and uses https://github.com/CSAILVision/semantic-segmentation-pytorch
+Install the library (preferably in a virtual environment):
 
-First, install the prereqs: 
-https://github.com/CSAILVision/semantic-segmentation-pytorch#integration-with-other-projects
+    pip install git+https://github.com/CSAILVision/semantic-segmentation-pytorch.git@master
+    
+Then clone this repo into your ros package path.
+
+For library errors, see [This repo](https://github.com/CSAILVision/semantic-segmentation-pytorch)
 
 
 
 
 # Pretrained Models
 The pretrained model for YCB objects should be downloaded automatically the first time you run this script. If not, manually downloaded the pretrained model to the `ckpt` directory:
+
 https://drive.google.com/file/d/17eV88dp33_Kxqt3ke_C1DoRICeOICh-4/view?usp=sharing
 
 
