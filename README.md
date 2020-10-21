@@ -58,6 +58,13 @@ Install the library (preferably in a virtual environment):
     
 Then clone this repo into your ros package path.
 
+Additional dependencies:
+- ROS
+- pytorch
+- `sudo apt install ros-[version]-image-geometry`
+- `pip install googledrivedownloader`
+
+
 For library errors, see [This repo](https://github.com/CSAILVision/semantic-segmentation-pytorch)
 
 
