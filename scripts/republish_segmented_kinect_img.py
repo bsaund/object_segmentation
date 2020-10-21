@@ -84,6 +84,7 @@ if __name__ == "__main__":
     # print(rospy.myargv(argv=sys.argv))
     args = parser.parse_args(args=rospy.myargv(argv=sys.argv)[1:])
 
+
     # cfg = default="config/ycbvideo-mobilenetv2dilated-c1_deepsup.yaml"
     # gpu = 0
     segmenter = obseg.Segmenter(args.cfg, args.gpu)
@@ -94,7 +95,7 @@ if __name__ == "__main__":
     segment_thread = threading.Thread(target=segment_thread_worker)
     segment_thread.start()
 
-    img_sub = rospy.Subscriber("/kinect2_victor_head/qhd/image_color/compressed", CompressedImage, img_callback,
+    img_sub = rospy.Subscriber("image_color/compressed", CompressedImage, img_callback,
                                queue_size=1)
 
     rospy.spin()

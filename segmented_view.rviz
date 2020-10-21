@@ -6,6 +6,8 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /Victor Head point cloud1
+        - /Segmented Pointcloud1
       Splitter Ratio: 0.5
     Tree Height: 408
   - Class: rviz/Selection
@@ -104,7 +106,7 @@ Visualization Manager:
       Transport Hint: raw
       Unreliable: false
       Value: true
-    - Alpha: 1
+    - Alpha: 0.05000000074505806
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
         Max Value: 10
@@ -136,7 +138,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/Image
       Enabled: true
-      Image Topic: /marked_image
+      Image Topic: kinect2_victor_head/qhd/marked_image
       Max Value: 1
       Median window: 5
       Min Value: 0
@@ -171,7 +173,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.009999999776482582
       Style: Flat Squares
-      Topic: /segmented_pointcloud
+      Topic: /kinect2_victor_head/qhd/segmented_pointcloud
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -204,7 +206,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 6.177628040313721
+      Distance: 3.6152193546295166
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -212,17 +214,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.768889844417572
-        Y: -0.12974312901496887
-        Z: 1.8271733522415161
+        X: 1.4110172986984253
+        Y: -1.9263497591018677
+        Z: 1.8253697156906128
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.3452019691467285
+      Pitch: 0.2052019089460373
       Target Frame: <Fixed Frame>
-      Yaw: 0.8185796737670898
+      Yaw: 1.0785794258117676
     Saved: ~
 Window Geometry:
   Displays:

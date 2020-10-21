@@ -56,17 +56,17 @@ if __name__ == "__main__":
     rospy.init_node("segmented_pointcloud_republisher")
     myargv = rospy.myargv(argv=sys.argv)
 
-    cloud_pub = rospy.Publisher("/segmented_pointcloud", PointCloud2, queue_size=1)
+    cloud_pub = rospy.Publisher("segmented_pointcloud", PointCloud2, queue_size=1)
 
     pt_thread = threading.Thread(target=filter_pointcloud_worker)
     pt_thread.start()
 
     last_update = rospy.get_rostime()
-    camera_model = utils.CameraModel("/kinect2_victor_head/qhd/camera_info")
+    camera_model = utils.CameraModel("camera_info")
 
-    image_mask_sub = message_filters.Subscriber("/segmentation_mask/compressed", CompressedImage)
-    image_rect_sub = message_filters.Subscriber("/kinect2_victor_head/qhd/image_color_rect/compressed", CompressedImage)
-    depth_image_sub = message_filters.Subscriber("/kinect2_victor_head/qhd/image_depth_rect/compressed",
+    image_mask_sub = message_filters.Subscriber("segmentation_mask/compressed", CompressedImage)
+    image_rect_sub = message_filters.Subscriber("image_color_rect/compressed", CompressedImage)
+    depth_image_sub = message_filters.Subscriber("image_depth_rect/compressed",
                                                  CompressedImage)
 
     time_sync = message_filters.TimeSynchronizer([image_mask_sub, image_rect_sub, depth_image_sub], 10)
