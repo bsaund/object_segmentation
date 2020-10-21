@@ -21,6 +21,34 @@ This packages adds on several new topics to that namespace:
 - `segmentation_mask` a mask where each pixel has the value of the inferred object category
 - `segmented_pointcloud` with just the points matching the object categories specified when launching
 
+# Object Categories
+The integer value of each pixel of the segmentation mask maps to a YCB object accoring to [this file](data/object_info.csv), copied below for convience:
+
+|Idx|Name                      |
+|---|--------------------------|
+|0  | 000_background           |
+|1  | 002_master_chef_can_16k  |
+|2  | 003_cracker_box_16k      |
+|3  | 004_sugar_box_16k        |
+|4  | 005_tomato_soup_can_16k  |
+|5  | 006_mustard_bottle_16k   |
+|6  | 007_tuna_fish_can_16k    |
+|7  | 008_pudding_box_16k      |
+|8  | 009_gelatin_box_16k      |
+|9  | 010_potted_meat_can_16k  |
+|10 | 011_banana_16k           |
+|11 | 019_pitcher_base_16k     |
+|12 | 021_bleach_cleanser_16k  |
+|13 | 024_bowl_16k             |
+|14 | 025_mug_16k              |
+|15 | 035_power_drill_16k      |
+|16 | 036_wood_block_16k       |
+|17 | 037_scissors_16k         |
+|18 | 040_large_marker_16k     |
+|19 | 051_large_clamp_16k      |
+|20 | 052_extra_large_clamp_16k|
+|21 | 061_foam_brick_16k       |
+
 
 # Installation
 
