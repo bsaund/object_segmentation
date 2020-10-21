@@ -7,7 +7,6 @@ import rospy
 
 from sensor_msgs.msg import PointCloud2
 from sensor_msgs.msg import CompressedImage
-from shape_completion_training.model import utils
 import message_filters
 from object_segmentation import pointcloud_utils as utils
 import sys
