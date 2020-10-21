@@ -97,7 +97,7 @@ class Segmenter:
         # print("Predictions in [{}]:".format(info))
         if verbose:
             for idx in np.argsort(counts)[::-1]:
-                name = self.names[uniques[idx] + 1]
+                name = self.names[uniques[idx]]
                 ratio = counts[idx] / pixs * 100
                 if ratio > 0.1:
                     print("  {:20}: {:.2f}%".format(name, ratio))
