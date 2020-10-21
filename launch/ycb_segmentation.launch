@@ -6,6 +6,7 @@
               output="screen"/>
         <node name="segmented_pointcloud_republisher" pkg="object_segmentation"
               type="republish_segmented_pointcloud.py" if="$(arg do_republish_pointcloud)"
-              args="[1, 2, 3]"/>
+              args="--objects 1 2"
+              output="screen"/>
     </group>
 </launch>

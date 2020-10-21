@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
+import argparse
 import threading
 import rospy
 
@@ -39,11 +40,9 @@ def filter_pointcloud(img_mask_msg, img_rect_msg, depth_rect_msg):
     img_rect = utils.decompress_img(img_rect_msg)
     depth_rect = utils.decompress_depth(depth_rect_msg)
 
-    cheezeit_box_categories = [2, 15]
-
     pts = utils.convert_masked_depth_img_to_pointcloud(depth_rect, img_rect, img_mask,
                                                        camera_model.camera_model,
-                                                       categories=cheezeit_box_categories)
+                                                       categories=args.objects)
 
     pt_msg = utils.pts_to_ptmsg(pts, img_rect_msg.header.frame_id)
     cloud_pub.publish(pt_msg)
@@ -54,7 +53,19 @@ def filter_pointcloud(img_mask_msg, img_rect_msg, depth_rect_msg):
 
 if __name__ == "__main__":
     rospy.init_node("segmented_pointcloud_republisher")
-    myargv = rospy.myargv(argv=sys.argv)
+    parser = argparse.ArgumentParser(
+        description="Ros Semantic Segmentation"
+    )
+    parser.add_argument(
+        "--objects",
+        default=[x for x in range(1, 25)],
+        nargs='*',
+        type=int,
+        help="list of object categories to include in segmentation"
+    )
+
+    args = parser.parse_args(args=rospy.myargv(argv=sys.argv)[1:])
+    print(f"Matching categories: {args.objects}")
 
     cloud_pub = rospy.Publisher("segmented_pointcloud", PointCloud2, queue_size=1)
 
