@@ -1,4 +1,5 @@
 <launch>
+    <arg name="objects" default="1 2 3 4"/>
     <group ns="kinect2_victor_head/qhd">
         <arg name="do_republish_pointcloud" default="true"/>
         <node name="ycb_segmentation_node" pkg="object_segmentation"
@@ -6,7 +7,7 @@
               output="screen"/>
         <node name="segmented_pointcloud_republisher" pkg="object_segmentation"
               type="republish_segmented_pointcloud.py" if="$(arg do_republish_pointcloud)"
-              args="--objects 1 2"
+              args="--objects $(arg objects)"
               output="screen"/>
     </group>
 </launch>
