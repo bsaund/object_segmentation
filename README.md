@@ -71,3 +71,6 @@ https://drive.google.com/file/d/17eV88dp33_Kxqt3ke_C1DoRICeOICh-4/view?usp=shari
 
 # The segmentation is not good enough!
 To train your own model, check out [my other github repo](https://github.com/bsaund/semantic-segmentation-pytorch)
+
+## Credit
+This is a ROS wrapper around a pytorch [library built by the MIT CSAIL Vision group](https://github.com/CSAILVision/semantic-segmentation-pytorch)
