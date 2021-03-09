@@ -1,5 +1,7 @@
 import numpy as np
 import cv2
+
+import message_filters
 import rospy
 from sensor_msgs.msg import CameraInfo
 import image_geometry
@@ -7,6 +9,8 @@ import struct
 from sensor_msgs.msg import PointField
 from std_msgs.msg import Header
 from sensor_msgs import point_cloud2
+from sensor_msgs.msg import PointCloud2
+from sensor_msgs.msg import CompressedImage
 
 
 class CameraModel:
@@ -120,3 +124,56 @@ def convert_masked_depth_img_to_pointcloud(depth_img, img, mask, camera_model, c
         pts.append([x, y, z, rgb])
 
     return pts
+
+
+class PointcloudCreator:
+    def __init__(self, selected_object_categories):
+        self.cloud_pub = rospy.Publisher("segmented_pointcloud", PointCloud2, queue_size=1)
+
+        self.objects = selected_object_categories
+
+        # pt_thread = threading.Thread(target=filter_pointcloud_worker)
+        # pt_thread.start()
+
+        self.last_update = rospy.get_rostime()
+        self.camera_model = CameraModel("camera_info")
+
+        image_mask_sub = message_filters.Subscriber("segmentation_mask/compressed", CompressedImage)
+        image_rect_sub = message_filters.Subscriber("image_color_rect/compressed", CompressedImage)
+        depth_image_sub = message_filters.Subscriber("image_depth_rect/compressed", CompressedImage)
+
+        time_sync = message_filters.TimeSynchronizer([image_mask_sub, image_rect_sub, depth_image_sub], 10)
+        time_sync.registerCallback(self.kinect_callback)
+
+        self.img_msgs_to_process = None
+
+    def kinect_callback(self, img_mask_msg, img_rect_msg, depth_rect_msg):
+        if self.img_msgs_to_process is not None:
+            return
+        self.img_msgs_to_process = (img_mask_msg, img_rect_msg, depth_rect_msg)
+
+    def prepare_for_next_callback(self):
+        self.img_msgs_to_process = None
+
+    def filter_pointcloud(self):
+        if self.camera_model.camera_model is None:
+            print("Waiting for camera model")
+            return
+        if self.img_msgs_to_process is None:
+            rospy.sleep(0.01)
+            return None
+
+        img_mask_msg, img_rect_msg, depth_rect_msg = self.img_msgs_to_process
+        img_mask = decompress_img(img_mask_msg)
+        img_rect = decompress_img(img_rect_msg)
+        depth_rect = decompress_depth(depth_rect_msg)
+
+        pts = convert_masked_depth_img_to_pointcloud(depth_rect, img_rect, img_mask,
+                                                     self.camera_model.camera_model,
+                                                     categories=self.objects)
+
+        pt_msg = pts_to_ptmsg(pts, img_rect_msg.header.frame_id)
+        self.cloud_pub.publish(pt_msg)
+        print("Pointcloud published")
+
+        return pt_msg
