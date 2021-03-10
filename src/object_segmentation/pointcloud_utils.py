@@ -127,7 +127,7 @@ def convert_masked_depth_img_to_pointcloud(depth_img, img, mask, camera_model, c
 
 
 class PointcloudCreator:
-    def __init__(self, selected_object_categories):
+    def __init__(self, selected_object_categories, topic_prefix=""):
         self.cloud_pub = rospy.Publisher("segmented_pointcloud", PointCloud2, queue_size=1)
 
         self.objects = selected_object_categories
@@ -136,11 +136,11 @@ class PointcloudCreator:
         # pt_thread.start()
 
         self.last_update = rospy.get_rostime()
-        self.camera_model = CameraModel("camera_info")
+        self.camera_model = CameraModel(topic_prefix + "camera_info")
 
-        image_mask_sub = message_filters.Subscriber("segmentation_mask/compressed", CompressedImage)
-        image_rect_sub = message_filters.Subscriber("image_color_rect/compressed", CompressedImage)
-        depth_image_sub = message_filters.Subscriber("image_depth_rect/compressed", CompressedImage)
+        image_mask_sub = message_filters.Subscriber(topic_prefix + "segmentation_mask/compressed", CompressedImage)
+        image_rect_sub = message_filters.Subscriber(topic_prefix + "image_color_rect/compressed", CompressedImage)
+        depth_image_sub = message_filters.Subscriber(topic_prefix + "image_depth_rect/compressed", CompressedImage)
 
         time_sync = message_filters.TimeSynchronizer([image_mask_sub, image_rect_sub, depth_image_sub], 10)
         time_sync.registerCallback(self.kinect_callback)
