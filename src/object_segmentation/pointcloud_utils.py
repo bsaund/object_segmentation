@@ -173,6 +173,7 @@ class PointcloudCreator:
                                                      categories=self.objects)
 
         pt_msg = pts_to_ptmsg(pts, img_rect_msg.header.frame_id)
+        pt_msg.header.stamp = img_mask.header.stamp
         self.cloud_pub.publish(pt_msg)
         print("Pointcloud published")
 
